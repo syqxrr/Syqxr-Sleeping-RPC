@@ -584,18 +584,6 @@ button:hover {
   transform: translateY(0);
 }
 
-/* TikTok tooltip — red glow */
-.corner-item.tiktok:hover .corner-tooltip {
-  box-shadow: 0 4px 16px rgba(253, 253, 253, 0.5);
-  color: #9a9da5;
-}
-
-/* Discord tooltip — purple glow */
-.corner-item.discord-server:hover .corner-tooltip {
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.5);
-  color: #9a9da5;
-}
-
 .corner-link {
   display: block;
   width: clamp(52px, 5vmin, 82px);
@@ -604,18 +592,6 @@ button:hover {
   overflow: hidden;
   box-shadow: 0 6px 16px rgba(0,0,0,0.45);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.corner-item:hover .corner-link {
-  transform: scale(1.05);
-}
-
-.corner-item.tiktok:hover .corner-link {
-  box-shadow: 0 10px 25px rgba(255,43,43,0.65);
-}
-
-.corner-item.discord-server:hover .corner-link {
-  box-shadow: 0 10px 25px rgba(88,101,242,0.7);
 }
 
 .corner-avatar {
@@ -686,26 +662,6 @@ button:hover {
 
 <img class="corner-decor" src="assets/bottom_left_corner_decor.png" alt="" />
 <img class="corner-decor-tr" src="assets/top_right_corner_decor.png" alt="" />
-
-<div class="corner-stack">
-
-  <a class="corner-item discord-server" href="https://discord.gg/midnightchasers" target="_blank" rel="noopener">
-    <span class="corner-tooltip">Midnight Chasers Discord</span>
-    <div class="corner-link">
-      <img class="corner-avatar" src="assets/discord_image.jpeg" alt="Midnight Chasers"
-        onerror="this.style.background='#5865F2';this.style.opacity='0.4'" />
-    </div>
-  </a>
-
-  <a class="corner-item tiktok" href="https://www.tiktok.com/@callmezuki0" target="_blank" rel="noopener">
-    <span class="corner-tooltip">Zuki's TikTok</span>
-    <div class="corner-link">
-      <img class="corner-avatar" src="assets/corner_avatar.jpeg" alt="TikTok"
-        onerror="this.style.background='#ff2b2b';this.style.opacity='0.4'" />
-    </div>
-  </a>
-
-</div>
 
 <script>
 
