@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Discord Presence Verification</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background: #2b2d31;
+  font-family: Arial, sans-serif;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Animated background — slow drifting radial pulses ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(255,80,80,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 30%, rgba(255,80,80,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(88,101,242,0.03) 0%, transparent 50%);
+  animation: bgDrift 10s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes bgDrift {
+  0%   { opacity: 0.6; }
+  50%  { opacity: 1;   }
+  100% { opacity: 0.7; }
+}
+
+/* ── Vignette ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center,
+    transparent 55%,
+    rgba(0,0,0,0.2) 80%,
+    rgba(0,0,0,0.5) 100%
+  );
+  pointer-events: none;
+  z-index: 999;
+}
+#particleCanvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.banner {
+  width: 100%;
+  height: clamp(60px, 10vmin, 160px);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #bac1c7;
+  z-index: 0;
+}
+
+.banner-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('assets/gradient.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+  padding: clamp(16px, 4vmin, 80px) clamp(12px, 3vw, 60px);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Card with animated glow border ── */
+.card {
+  background: #1f1f1f;
+  border-radius: clamp(10px, 1vmin, 16px);
+  padding: clamp(16px, 1.8vmin, 36px);
+  width: clamp(300px, 38vw, 780px);
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.5),
+    inset 0 0 30px rgba(255,43,43,0.04);
+  text-align: left;
+  position: relative;
+  animation: riseIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both,
+             cardInnerGlow 6s ease-in-out 1s infinite alternate;
+}
+
+@keyframes cardInnerGlow {
+  0%   { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 25px rgba(255,43,43,0.03); }
+  50%  { box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 50px rgba(255,43,43,0.09); }
+  100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 25px rgba(255,43,43,0.04); }
+}
+
+/* Glow border via pseudo-element */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(40, 39, 39, 0.5),
+    rgba(88, 86, 86, 0.05) 40%,
+    rgba(124, 124, 125, 0.05) 60%,
+    rgba(169, 167, 167, 0.3)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  animation: borderGlow 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes borderGlow {
+  0%   { opacity: 0.4; filter: blur(0px); }
+  50%  { opacity: 0.9; filter: blur(0.3px); }
+  100% { opacity: 0.5; filter: blur(0px); }
+}
+
+/* Subtle red glow behind card */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border-radius: 30px;
+  background: radial-gradient(ellipse at center, rgba(255,43,43,0.06) 0%, transparent 70%);
+  animation: cardAura 8s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes cardAura {
+  0%   { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 1;   transform: scale(1.02); }
+}
+
+/* ── Fade + rise — dramatic card entrance ── */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.97);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* Card rises in on load — slower, more weight */
+.card {
+  animation: riseIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* User row — slight delay after card */
+.user {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+/* Progress bar — after user */
+.progress {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+
+/* Status text — after progress */
+.status {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+
+/* Terminal line — after status */
+.terminal {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.42s both;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.5vmin, 20px);
+  margin-bottom: clamp(12px, 2vmin, 28px);
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+.pfp {
+  width: clamp(44px, 4vmin, 72px);
+  height: clamp(44px, 4vmin, 72px);
+  border-radius: clamp(8px, 0.9vmin, 12px);
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: block;
+  background: #1e1f22;
+  flex-shrink: 0;
+}
+
+.pfp:hover {
+  animation: wobble 0.5s ease forwards;
+  box-shadow: 0 8px 20px rgba(40, 39, 39, 0.5);
+}
+
+.user-info { display: flex; flex-direction: column; gap: 3px; }
+
+.username {
+  font-size: clamp(16px, 1.8vmin, 26px);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.username-handle {
+  font-size: clamp(11px, 0.9vmin, 14px);
+  font-style: italic;
+  color: #6d6f78;
+  letter-spacing: 0.02em;
+}
+
+/* ── Smooth resize transitions ── */
+.card {
+  transition:
+    width 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    padding 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pfp {
+  transition:
+    width 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.username, .username-handle, .status, .terminal, .result h3, .glitch-text {
+  transition:
+    font-size 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.progress {
+  transition:
+    height 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Avatar wobble on hover ── */
+@keyframes wobble {
+  0%   { transform: rotate(0deg)    scale(1.05); }
+  20%  { transform: rotate(-4deg)   scale(1.05); }
+  40%  { transform: rotate(4deg)    scale(1.05); }
+  60%  { transform: rotate(-2.5deg) scale(1.05); }
+  80%  { transform: rotate(2deg)    scale(1.05); }
+  100% { transform: rotate(0deg)    scale(1.05); }
+}
+.progress {
+  width: 100%;
+  height: clamp(8px, 0.8vmin, 12px);
+  background: #1e1f22;
+  border-radius: 20px;
+  overflow: visible;
+  position: relative;
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+
+/* Glow bloom behind the bar */
+.progress::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  background: inherit;
+  pointer-events: none;
+  opacity: 0;
+  filter: blur(8px);
+  z-index: -1;
+}
+
+.bar {
+  height: 100%;
+  width: 0%;
+  background: #ff2b2b;
+  border-radius: 20px;
+  position: relative;
+  box-shadow: 0 0 12px 2px rgba(255,43,43,0.5), 0 0 24px 4px rgba(255,43,43,0.2);
+}
+
+.bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    rgba(255,255,255,0.09) 2px,
+    transparent 4px
+  );
+  animation: scanMove 0.35s linear infinite;
+}
+
+@keyframes scanMove {
+  from { background-position: 0 0; }
+  to   { background-position: 40px 0; }
+}
+
+/* ── Main status (normal font, white-ish) ── */
+.status {
+  margin-top: clamp(6px, 0.8vmin, 12px);
+  font-size: clamp(12px, 1.1vmin, 16px);
+  color: rgba(255,255,255,0.8);
+  min-height: 1.5em;
+  transition: opacity 0.18s ease, transform 0.18s ease, filter 0.18s ease;
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+.status.fade {
+  opacity: 0;
+  transform: translateY(-6px);
+  filter: blur(2px);
+}
+
+.cursor {
+  display: inline-block;
+  width: clamp(4px, 0.5vmin, 7px);
+  height: clamp(10px, 1.1vmin, 15px);
+  background: #ff2b2b;
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: blink 0.7s step-start infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── Terminal sub-line ── */
+.terminal {
+  margin-top: clamp(3px, 0.5vmin, 8px);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(9px, 0.85vmin, 12px);
+  color: #4a4e57;
+  min-height: 1.4em;
+  letter-spacing: 0.03em;
+  transition: opacity 0.08s ease;
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.42s both;
+}
+.terminal.fade { opacity: 0; }
+
+/* ── Result ── */
+.result {
+  display: none;
+  text-align: center;
+  margin-top: clamp(8px, 1vmin, 16px);
+}
+.result h3 { font-size: clamp(13px, 1.2vmin, 18px); margin: 0 0 4px; }
+
+/* Applied via JS when result shown */
+.result.visible {
+  display: block;
+  animation: cinematicReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cinematicReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.95);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* Exit — scanning content fades and sinks before result appears */
+@keyframes sinkOut {
+  from { opacity: 1; transform: translateY(0);   }
+  to   { opacity: 0; transform: translateY(10px); }
+}
+
+.sink-out {
+  animation: sinkOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+/* ── Glitch text ── */
+.glitch-wrap {
+  margin-top: clamp(5px, 0.7vmin, 10px);
+  min-height: 1.4em;
+}
+
+.glitch-text {
+  display: inline-block;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(10px, 0.9vmin, 14px);
+  color: #1f1f1f;
+  opacity: 0;
+  letter-spacing: 0.08em;
+  position: relative;
+}
+
+.glitch-text.play {
+  animation: glitchReveal 2.2s steps(1) forwards;
+}
+
+@keyframes glitchReveal {
+  0%   { opacity: 0;   transform: skewX(0deg);    filter: none; }
+  8%   { opacity: 0.9; transform: skewX(-12deg);  filter: blur(1px) brightness(2); }
+  10%  { opacity: 0;   transform: skewX(0deg);    filter: none; }
+  18%  { opacity: 0.8; transform: skewX(8deg);    filter: blur(2px); }
+  20%  { opacity: 0;   transform: skewX(0deg);    filter: none; }
+  30%  { opacity: 1;   transform: skewX(-4deg) translateX(-3px); filter: blur(0.5px) brightness(1.6); }
+  33%  { opacity: 0;   transform: skewX(0deg);    filter: none; }
+  44%  { opacity: 1;   transform: skewX(6deg) translateX(4px);  filter: blur(1px); }
+  46%  { opacity: 0;   transform: skewX(0deg);    filter: none; }
+  55%  { opacity: 1;   transform: skewX(-2deg);   filter: brightness(1.8); }
+  57%  { opacity: 0.3; transform: skewX(0deg);    filter: none; }
+  68%  { opacity: 1;   transform: skewX(3deg) translateX(-2px); filter: blur(0.5px); }
+  70%  { opacity: 0.6; transform: skewX(0deg);    filter: none; }
+  80%  { opacity: 1;   transform: skewX(-1deg);   filter: brightness(1.3); }
+  88%  { opacity: 0.9; transform: skewX(0deg);    filter: none; }
+  100% { opacity: 1;   transform: skewX(0deg) translateX(0); filter: none; }
+}
+
+button {
+  margin-top: clamp(10px, 1vmin, 16px);
+  background: #5865F2;
+  border: none;
+  color: white;
+  padding: clamp(7px, 0.8vmin, 12px) clamp(12px, 1.2vmin, 20px);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: clamp(12px, 1vmin, 15px);
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+button:hover {
+  background: #4752c4;
+  box-shadow: 0 4px 16px rgba(88,101,242,0.4);
+}
+
+/* ── Bottom left decoration ── */
+.corner-decor {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: clamp(280px, 32vmin, 620px);
+  height: auto;
+  pointer-events: none;
+  z-index: 0;
+  animation:
+    decorSlideInBL 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both,
+    decorGlow 4s ease-in-out 1.2s infinite alternate;
+  transform-origin: bottom left;
+}
+
+@keyframes decorSlideInBL {
+  from {
+    opacity: 0;
+    transform: translateX(-80px) translateY(80px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+/* ── Top right decoration (mirrored) ── */
+.corner-decor-tr {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: clamp(280px, 32vmin, 620px);
+  height: auto;
+  pointer-events: none;
+  z-index: 0;
+  animation:
+    decorSlideInTR 1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both,
+    decorGlow 4s ease-in-out 1.6s infinite alternate;
+  transform-origin: top right;
+}
+
+@keyframes decorSlideInTR {
+  from {
+    opacity: 0;
+    transform: translateX(80px) translateY(-80px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+@keyframes decorGlow {
+  0% {
+    filter:
+      brightness(1)
+      drop-shadow(0 0 2px rgba(74, 73, 73, 0.2))
+      drop-shadow(0 0 1px rgba(255,255,255,0.1));
+  }
+  50% {
+    filter:
+      brightness(1.12)
+      drop-shadow(0 0 10px rgba(44, 43, 43, 0.6))
+      drop-shadow(0 0 6px rgba(72, 71, 71, 0.3))
+      drop-shadow(0 0 8px rgba(255,255,255,0.25));
+  }
+  100% {
+    filter:
+      brightness(1.04)
+      drop-shadow(0 0 4px rgba(49, 48, 48, 0.3))
+      drop-shadow(0 0 2px rgba(255,255,255,0.12));
+  }
+}
+.corner-stack {
+  position: fixed;
+  bottom: clamp(12px, 2vmin, 28px);
+  right: clamp(12px, 2vmin, 28px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: clamp(8px, 1.5vmin, 20px);
+  z-index: 10;
+}
+
+.corner-item {
+  position: relative;
+  display: block;
+  text-decoration: none;
+}
+
+/* Tooltip — centered above the button */
+.corner-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  left: auto;
+  transform: translateY(4px);
+  background: #2a2c30;
+  color: #7a7d85;
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  font-size: clamp(9px, 0.8vmin, 12px);
+  white-space: normal;
+  width: clamp(56px, 5vmin, 88px);
+  text-align: center;
+  padding: clamp(4px, 0.4vmin, 7px) clamp(6px, 0.6vmin, 10px);
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  line-height: 1.4;
+}
+
+/* arrow pointing down, aligned right */
+.corner-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  right: clamp(20px, 4vw, 35px);
+  border: 5px solid transparent;
+  border-bottom: none;
+  border-top-color: #2a2c30;
+}
+
+.corner-item:hover .corner-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* TikTok tooltip — red glow */
+.corner-item.tiktok:hover .corner-tooltip {
+  box-shadow: 0 4px 16px rgba(253, 253, 253, 0.5);
+  color: #9a9da5;
+}
+
+/* Discord tooltip — purple glow */
+.corner-item.discord-server:hover .corner-tooltip {
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.5);
+  color: #9a9da5;
+}
+
+.corner-link {
+  display: block;
+  width: clamp(52px, 5vmin, 82px);
+  height: clamp(52px, 5vmin, 82px);
+  border-radius: clamp(8px, 0.9vmin, 14px);
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.corner-item:hover .corner-link {
+  transform: scale(1.05);
+}
+
+.corner-item.tiktok:hover .corner-link {
+  box-shadow: 0 10px 25px rgba(255,43,43,0.65);
+}
+
+.corner-item.discord-server:hover .corner-link {
+  box-shadow: 0 10px 25px rgba(88,101,242,0.7);
+}
+
+.corner-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  background: #1e1f22;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="banner">
+  <div class="banner-bg"></div>
+</div>
+
+<div class="center">
+  <div class="card">
+
+    <div class="user">
+      <img class="pfp" src="assets/main_avatar.jpeg" alt="Avatar"
+        onerror="this.style.background='#ff2b2b';this.style.opacity='0.3'" />
+      <div class="user-info">
+        <div class="username">Q!</div>
+        <div class="username-handle">syqxr</div>
+      </div>
+    </div>
+
+    <div class="progress">
+      <div class="bar" id="bar"></div>
+    </div>
+
+    <div class="status" id="status">
+      <span id="statusText">Initializing...</span><span class="cursor"></span>
+    </div>
+    <div class="terminal" id="terminal">&nbsp;</div>
+
+    <div class="result" id="result">
+      <h3>That's not very nice, let them sleep in peace</h3>
+      <div class="glitch-wrap">
+        <span class="glitch-text" id="glitchText">stop stalking me</span>
+      </div>
+      <a id="discordBtn" href="https://discord.com/app" target="_blank" style="
+        display: inline-block;
+        margin-top: clamp(10px, 1vmin, 16px);
+        background: #5865F2;
+        color: white;
+        padding: clamp(7px, 0.8vmin, 12px) clamp(12px, 1.2vmin, 20px);
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: clamp(12px, 1vmin, 15px);
+        font-family: Arial, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-decoration: none;
+      " onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865F2'">
+        Return to Discord
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<img class="corner-decor" src="assets/bottom_left_corner_decor.png" alt="" />
+<img class="corner-decor-tr" src="assets/top_right_corner_decor.png" alt="" />
+
+<div class="corner-stack">
+
+  <a class="corner-item discord-server" href="https://discord.gg/midnightchasers" target="_blank" rel="noopener">
+    <span class="corner-tooltip">Midnight Chasers Discord</span>
+    <div class="corner-link">
+      <img class="corner-avatar" src="assets/discord_image.jpeg" alt="Midnight Chasers"
+        onerror="this.style.background='#5865F2';this.style.opacity='0.4'" />
+    </div>
+  </a>
+
+  <a class="corner-item tiktok" href="https://www.tiktok.com/@callmezuki0" target="_blank" rel="noopener">
+    <span class="corner-tooltip">Zuki's TikTok</span>
+    <div class="corner-link">
+      <img class="corner-avatar" src="assets/corner_avatar.jpeg" alt="TikTok"
+        onerror="this.style.background='#ff2b2b';this.style.opacity='0.4'" />
+    </div>
+  </a>
+
+</div>
+
+<script>
+
+// Each entry: main status label + a list of terminal sub-lines that
+// cycle quickly underneath it while the bar jitters through that segment.
+const steps = [
+  {
+    status: "Connecting to gateway...",
+    terms: [
+      "opening socket...",
+      "socket open",
+      "fetching client ID...",
+      "client ID = 1241309752948387003",
+      "client ID attached",
+    ]
+  },
+  {
+    status: "Fetching presence status...",
+    terms: [
+      "fetching presence status...",
+      "presence status = IDLE",
+      "fetching session flags...",
+      "session flags = 0x04",
+      "session flags attached",
+    ]
+  },
+  {
+    status: "Reading device state...",
+    terms: [
+      "fetching device state...",
+      "device state = idle",
+      "fetching last active timestamp...",
+      "last_active = 7 min ago",
+      "activity timeout confirmed",
+    ]
+  },
+  {
+    status: "Scanning active processes...",
+    terms: [
+      "scanning process list...",
+      "discord.exe — status: idle",
+      "no media processes detected",
+      "no game activity detected",
+      "process scan complete",
+    ]
+  },
+  {
+    status: "Verifying presence report...",
+    terms: [
+      "cross-referencing session data...",
+      "idle flag = confirmed",
+      "fetching afk timeout value...",
+      "afk_timeout = 600s",
+      "report sealed — user is asleep",
+    ]
+  },
+]
+
+// Total run time random 4s–10s, split across steps
+const totalMs = 4000 + Math.random() * 6000
+const rawW    = steps.map(() => 0.6 + Math.random())
+const wSum    = rawW.reduce((a,b) => a+b, 0)
+const slices  = rawW.map(w => (w / wSum) * totalMs)
+
+const barEl      = document.getElementById("bar")
+const statusEl   = document.getElementById("status")
+const statusTxt  = document.getElementById("statusText")
+const terminalEl = document.getElementById("terminal")
+
+let currentPct = 0
+
+// Jitter bar to targetPct over durationMs with rAF — no CSS transition
+function jitterTo(targetPct, durationMs, onDone) {
+  const startPct  = currentPct
+  const startTime = performance.now()
+  let   lastStutter = 0
+
+  ;(function tick(now) {
+    const elapsed = now - startTime
+    const rawT    = Math.min(elapsed / durationMs, 1)
+    const eased   = 1 - Math.pow(1 - rawT, 2)
+    let   base    = startPct + (targetPct - startPct) * eased
+
+    const noise   = (Math.random() - 0.5) * 1.8
+    let stutter   = 0
+    if (now - lastStutter > 500 + Math.random() * 800) {
+      stutter     = -(Math.random() * 3.5)
+      lastStutter = now
+    }
+    const spike   = Math.random() < 0.04 ? Math.random() * 2.5 : 0
+
+    let display   = base + noise + stutter + spike
+    display       = Math.max(currentPct - 1, Math.min(targetPct + 1.5, display))
+
+    barEl.style.width = display.toFixed(2) + "%"
+    currentPct        = display
+
+    if (rawT < 1) requestAnimationFrame(tick)
+    else {
+      barEl.style.width = targetPct + "%"
+      currentPct = targetPct
+      onDone()
+    }
+  })(performance.now())
+}
+
+// Swap main status text with slide out up / slide in from below
+function setStatus(text) {
+  statusEl.classList.add("fade")
+  setTimeout(() => {
+    statusTxt.textContent = text
+    statusEl.style.transform = "translateY(8px)"
+    statusEl.style.opacity = "0"
+    statusEl.style.filter = "blur(2px)"
+    statusEl.classList.remove("fade")
+    requestAnimationFrame(() => {
+      statusEl.style.transition = "opacity 0.25s ease, transform 0.25s cubic-bezier(0.16,1,0.3,1), filter 0.25s ease"
+      statusEl.style.transform = "translateY(0)"
+      statusEl.style.opacity = "1"
+      statusEl.style.filter = "blur(0px)"
+    })
+  }, 180)
+}
+
+// Cycle terminal lines aggressively — very short dwell per line
+function cycleTerminal(terms, durationMs, onDone) {
+  let idx = 0
+  terminalEl.textContent = terms[0]
+
+  // Each line gets an equal slice of ~75% of the step duration
+  const interval = (durationMs * 0.75) / terms.length
+
+  function next() {
+    if (idx >= terms.length - 1) return
+    idx++
+    terminalEl.classList.add("fade")
+    setTimeout(() => {
+      terminalEl.textContent = terms[idx]
+      terminalEl.classList.remove("fade")
+    }, 80)   // 80ms fade — snappy
+    setTimeout(next, interval * (0.75 + Math.random() * 0.5))
+  }
+
+  setTimeout(next, interval * (0.5 + Math.random() * 0.5))
+  setTimeout(onDone, durationMs)
+}
+
+// Run each step in sequence
+function runStep(i) {
+  if (i >= steps.length) {
+    jitterTo(100, 500, () => {
+      setStatus("Verification complete.")
+      terminalEl.textContent = "report sealed — user is asleep"
+
+      // Short pause so user reads the final status, then smoothly swap
+      setTimeout(() => {
+        // Sink out the progress block, status and terminal together
+        const progressEl = document.querySelector(".progress")
+        progressEl.classList.add("sink-out")
+        statusEl.classList.add("sink-out")
+        terminalEl.classList.add("sink-out")
+
+        // After exit anim completes, hide them and rise in result
+        setTimeout(() => {
+          progressEl.style.display = "none"
+          statusEl.style.display   = "none"
+          terminalEl.style.display = "none"
+
+          const resultEl = document.getElementById("result")
+          resultEl.classList.add("visible")
+
+          // Glitch text fires shortly after result appears
+          setTimeout(() => {
+            document.getElementById("glitchText").classList.add("play")
+          }, 900)
+        }, 250)
+      }, 350)
+    })
+    return
+  }
+
+  const step      = steps[i]
+  const dur       = slices[i]
+  const targetPct = ((i + 1) / steps.length) * 94
+
+  setStatus(step.status)
+
+  let barDone  = false
+  let termDone = false
+
+  function tryNext() {
+    if (barDone && termDone)
+      setTimeout(() => runStep(i + 1), 80 + Math.random() * 150)
+  }
+
+  jitterTo(targetPct, dur, () => { barDone  = true; tryNext() })
+  cycleTerminal(step.terms, dur, () => { termDone = true; tryNext() })
+}
+
+// ── Subtle floating particles ─────────────────────────────────────────────────
+const canvas  = document.getElementById("particleCanvas")
+const ctx     = canvas.getContext("2d")
+
+function resize() {
+  canvas.width  = window.innerWidth
+  canvas.height = window.innerHeight
+}
+resize()
+window.addEventListener("resize", resize)
+
+const PARTICLE_COUNT = 38
+const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+  x:     Math.random() * window.innerWidth,
+  y:     Math.random() * window.innerHeight,
+  r:     0.6 + Math.random() * 1.4,
+  vx:    (Math.random() - 0.5) * 0.18,
+  vy:    -0.08 - Math.random() * 0.18,
+  alpha: 0.08 + Math.random() * 0.18,
+  // alternate between red and purple tint
+  hue:  Math.random() < 0.7 ? "255,43,43" : "88,101,242",
+}))
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  particles.forEach(p => {
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+    ctx.fillStyle = `rgba(${p.hue},${p.alpha})`
+    ctx.fill()
+
+    p.x += p.vx
+    p.y += p.vy
+
+    // Wrap around edges
+    if (p.y < -5)              p.y = canvas.height + 5
+    if (p.x < -5)              p.x = canvas.width  + 5
+    if (p.x > canvas.width+5)  p.x = -5
+  })
+
+  requestAnimationFrame(drawParticles)
+}
+
+drawParticles()
+
+// ── Cursor trail ─────────────────────────────────────────────────────────────
+const trail = []
+let mouseX = -999, mouseY = -999
+
+window.addEventListener("mousemove", e => {
+  mouseX = e.clientX
+  mouseY = e.clientY
+
+  // Spawn 2-3 trail particles per move
+  const count = 2 + Math.floor(Math.random() * 2)
+  for (let i = 0; i < count; i++) {
+    trail.push({
+      x:     mouseX + (Math.random() - 0.5) * 6,
+      y:     mouseY + (Math.random() - 0.5) * 6,
+      r:     1.2 + Math.random() * 2.2,
+      vx:    (Math.random() - 0.5) * 0.3,
+      vy:    (Math.random() - 0.5) * 0.3,
+      alpha: 0.55 + Math.random() * 0.3,
+      decay: 0.03 + Math.random() * 0.03,
+      // mostly red, occasional dark
+      hue:   Math.random() < 0.75 ? "255,43,43" : "180,30,30",
+    })
+  }
+})
+
+function drawTrail() {
+  // Draw trail particles on top of existing canvas content
+  for (let i = trail.length - 1; i >= 0; i--) {
+    const p = trail[i]
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+    ctx.fillStyle = `rgba(${p.hue},${p.alpha})`
+    ctx.fill()
+
+    p.x     += p.vx
+    p.y     += p.vy
+    p.alpha -= p.decay
+    p.r     *= 0.97
+
+    if (p.alpha <= 0) trail.splice(i, 1)
+  }
+  requestAnimationFrame(drawTrail)
+}
+
+drawTrail()
+
+runStep(0)
+
+</script>
+</body>
+</html>
