@@ -12,9 +12,9 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100vh;
-  background: #2b2d31;
+  background: #ffffff;
   font-family: Arial, sans-serif;
-  color: white;
+  color: #1a1a1a;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,9 +26,9 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(145, 145, 145, 0.07) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 30%, rgba(255,80,80,0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(88,101,242,0.03) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 50%, rgba(200, 200, 200, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 30%, rgba(180, 180, 180, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(150, 150, 150, 0.02) 0%, transparent 50%);
   animation: bgDrift 10s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -47,8 +47,8 @@ body::after {
   inset: 0;
   background: radial-gradient(ellipse at center,
     transparent 55%,
-    rgba(0,0,0,0.2) 80%,
-    rgba(0,0,0,0.5) 100%
+    rgba(0,0,0,0.05) 80%,
+    rgba(0,0,0,0.12) 100%
   );
   pointer-events: none;
   z-index: 999;
@@ -89,23 +89,24 @@ body::after {
 
 /* ── Card with animated glow border ── */
 .card {
-  background: #1f1f1f;
+  background: #ffffff;
   border-radius: clamp(10px, 1vmin, 16px);
   padding: clamp(16px, 1.8vmin, 36px);
   width: clamp(300px, 38vw, 780px);
   box-shadow:
-    0 10px 30px rgba(0,0,0,0.5),
-    inset 0 0 30px rgba(255,43,43,0.04);
+    0 10px 30px rgba(0,0,0,0.1),
+    inset 0 0 30px rgba(0,0,0,0.02);
   text-align: left;
   position: relative;
   animation: riseIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both,
              cardInnerGlow 6s ease-in-out 1s infinite alternate;
+  border: 1px solid #e0e0e0;
 }
 
 @keyframes cardInnerGlow {
-  0%   { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 25px rgba(39, 39, 39, 0.03); }
-  50%  { box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 50px rgba(155, 155, 155, 0.09); }
-  100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 25px rgba(69, 68, 68, 0.04); }
+  0%   { box-shadow: 0 10px 30px rgba(0,0,0,0.1), inset 0 0 25px rgba(200, 200, 200, 0.02); }
+  50%  { box-shadow: 0 10px 40px rgba(0,0,0,0.15), inset 0 0 50px rgba(150, 150, 150, 0.08); }
+  100% { box-shadow: 0 10px 30px rgba(0,0,0,0.1), inset 0 0 25px rgba(180, 180, 180, 0.03); }
 }
 
 /* Glow border via pseudo-element */
@@ -117,10 +118,10 @@ body::after {
   padding: 1px;
   background: linear-gradient(
     135deg,
-    rgba(40, 39, 39, 0.5),
-    rgba(88, 86, 86, 0.05) 40%,
-    rgba(124, 124, 125, 0.05) 60%,
-    rgba(169, 167, 167, 0.3)
+    rgba(200, 200, 200, 0.3),
+    rgba(220, 220, 220, 0.1) 40%,
+    rgba(210, 210, 210, 0.1) 60%,
+    rgba(190, 190, 190, 0.2)
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -136,13 +137,13 @@ body::after {
   100% { opacity: 0.5; filter: blur(0px); }
 }
 
-/* Subtle red glow behind card */
+/* Subtle glow behind card */
 .card::after {
   content: '';
   position: absolute;
   inset: -20px;
   border-radius: 30px;
-  background: radial-gradient(ellipse at center, rgba(47, 47, 47, 0.06) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(200, 200, 200, 0.08) 0%, transparent 70%);
   animation: cardAura 8s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: -1;
@@ -206,16 +207,16 @@ body::after {
   border-radius: clamp(8px, 0.9vmin, 12px);
   object-fit: cover;
   object-position: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   display: block;
-  background: #1e1f22;
+  background: #f0f0f0;
   flex-shrink: 0;
 }
 
 .pfp:hover {
   animation: wobble 0.5s ease forwards;
-  box-shadow: 0 8px 20px rgba(40, 39, 39, 0.5);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 .user-info { display: flex; flex-direction: column; gap: 3px; }
@@ -229,7 +230,7 @@ body::after {
 .username-handle {
   font-size: clamp(11px, 0.9vmin, 14px);
   font-style: italic;
-  color: #6d6f78;
+  color: #888888;
   letter-spacing: 0.02em;
 }
 
@@ -272,7 +273,7 @@ body::after {
 .progress {
   width: 100%;
   height: clamp(8px, 0.8vmin, 12px);
-  background: #1e1f22;
+  background: #e0e0e0;
   border-radius: 20px;
   overflow: visible;
   position: relative;
@@ -295,10 +296,10 @@ body::after {
 .bar {
   height: 100%;
   width: 0%;
-  background: #ffffff;
+  background: #666666;
   border-radius: 20px;
   position: relative;
-  box-shadow: 0 0 12px 2px rgba(198, 198, 198, 0.5), 0 0 24px 4px rgba(135, 135, 135, 0.2);
+  box-shadow: 0 0 12px 2px rgba(100, 100, 100, 0.5), 0 0 24px 4px rgba(80, 80, 80, 0.2);
 }
 
 .bar::after {
@@ -319,11 +320,11 @@ body::after {
   to   { background-position: 40px 0; }
 }
 
-/* ── Main status (normal font, white-ish) ── */
+/* ── Main status (normal font, dark) ── */
 .status {
   margin-top: clamp(6px, 0.8vmin, 12px);
   font-size: clamp(12px, 1.1vmin, 16px);
-  color: rgba(255,255,255,0.8);
+  color: #333333;
   min-height: 1.5em;
   transition: opacity 0.18s ease, transform 0.18s ease, filter 0.18s ease;
   animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
@@ -338,10 +339,11 @@ body::after {
   display: inline-block;
   width: clamp(4px, 0.5vmin, 7px);
   height: clamp(10px, 1.1vmin, 15px);
-  background: #ffffff;
+  background: #000000;
   margin-left: 3px;
   vertical-align: middle;
   animation: blink 0.7s step-start infinite;
+  border-radius: 1px;
 }
 @keyframes blink { 50% { opacity: 0; } }
 
@@ -350,7 +352,7 @@ body::after {
   margin-top: clamp(3px, 0.5vmin, 8px);
   font-family: 'Courier New', Courier, monospace;
   font-size: clamp(9px, 0.85vmin, 12px);
-  color: #4a4e57;
+  color: #777777;
   min-height: 1.4em;
   letter-spacing: 0.03em;
   transition: opacity 0.08s ease;
@@ -406,7 +408,7 @@ body::after {
   display: inline-block;
   font-family: 'Courier New', Courier, monospace;
   font-size: clamp(10px, 0.9vmin, 14px);
-  color: #1f1f1f;
+  color: #333333;
   opacity: 0;
   letter-spacing: 0.08em;
   position: relative;
@@ -437,7 +439,7 @@ body::after {
 
 button {
   margin-top: clamp(10px, 1vmin, 16px);
-  background: #5865F2;
+  background: #666666;
   border: none;
   color: white;
   padding: clamp(7px, 0.8vmin, 12px) clamp(12px, 1.2vmin, 20px);
@@ -450,8 +452,8 @@ button {
   transition: background 0.2s, box-shadow 0.2s;
 }
 button:hover {
-  background: #4752c4;
-  box-shadow: 0 4px 16px rgba(88,101,242,0.4);
+  background: #555555;
+  box-shadow: 0 4px 16px rgba(100,100,100,0.4);
 }
 
 /* ── Bottom left decoration ── */
@@ -510,21 +512,21 @@ button:hover {
   0% {
     filter:
       brightness(1)
-      drop-shadow(0 0 2px rgba(74, 73, 73, 0.2))
-      drop-shadow(0 0 1px rgba(255,255,255,0.1));
+      drop-shadow(0 0 2px rgba(100, 100, 100, 0.15))
+      drop-shadow(0 0 1px rgba(0,0,0,0.08));
   }
   50% {
     filter:
-      brightness(1.12)
-      drop-shadow(0 0 10px rgba(44, 43, 43, 0.6))
-      drop-shadow(0 0 6px rgba(72, 71, 71, 0.3))
-      drop-shadow(0 0 8px rgba(255,255,255,0.25));
+      brightness(1.08)
+      drop-shadow(0 0 10px rgba(120, 120, 120, 0.3))
+      drop-shadow(0 0 6px rgba(100, 100, 100, 0.2))
+      drop-shadow(0 0 8px rgba(80,80,80,0.15));
   }
   100% {
     filter:
-      brightness(1.04)
-      drop-shadow(0 0 4px rgba(49, 48, 48, 0.3))
-      drop-shadow(0 0 2px rgba(255,255,255,0.12));
+      brightness(1.02)
+      drop-shadow(0 0 4px rgba(110, 110, 110, 0.2))
+      drop-shadow(0 0 2px rgba(0,0,0,0.1));
   }
 }
 .corner-stack {
@@ -551,8 +553,8 @@ button:hover {
   right: 0;
   left: auto;
   transform: translateY(4px);
-  background: #2a2c30;
-  color: #7a7d85;
+  background: #f5f5f5;
+  color: #666666;
   font-family: Arial, sans-serif;
   font-weight: 700;
   font-size: clamp(9px, 0.8vmin, 12px);
@@ -565,6 +567,7 @@ button:hover {
   opacity: 0;
   transition: opacity 0.15s ease, transform 0.15s ease;
   line-height: 1.4;
+  border: 1px solid #e0e0e0;
 }
 
 /* arrow pointing down, aligned right */
@@ -575,7 +578,7 @@ button:hover {
   right: clamp(20px, 4vw, 35px);
   border: 5px solid transparent;
   border-bottom: none;
-  border-top-color: #2a2c30;
+  border-top-color: #f5f5f5;
 }
 
 .corner-item:hover .corner-tooltip {
@@ -650,7 +653,7 @@ button:hover {
       <a id="discordBtn" href="https://discord.com/app" target="_blank" style="
         display: inline-block;
         margin-top: clamp(10px, 1vmin, 16px);
-        background: #5865F2;
+        background: #666666;
         color: white;
         padding: clamp(7px, 0.8vmin, 12px) clamp(12px, 1.2vmin, 20px);
         border-radius: 8px;
@@ -660,7 +663,7 @@ button:hover {
         font-weight: 700;
         letter-spacing: 0.03em;
         text-decoration: none;
-      " onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865F2'">
+      " onmouseover="this.style.background='#555555'" onmouseout="this.style.background='#666666'">
         Return to Discord
       </a>
     </div>
