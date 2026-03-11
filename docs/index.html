@@ -11,7 +11,7 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   background: #2b2d31;
   font-family: Arial, sans-serif;
   color: white;
@@ -26,7 +26,7 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(255,80,80,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 50%, rgba(145, 145, 145, 0.07) 0%, transparent 55%),
     radial-gradient(ellipse at 80% 30%, rgba(255,80,80,0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 80%, rgba(88,101,242,0.03) 0%, transparent 50%);
   animation: bgDrift 10s ease-in-out infinite alternate;
@@ -62,7 +62,7 @@ body::after {
 
 .banner {
   width: 100%;
-  height: clamp(60px, 10vmin, 160px);
+  height: 100vh;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
@@ -74,7 +74,8 @@ body::after {
   position: absolute;
   inset: 0;
   background-image: url('assets/gradient.png');
-  background-size: 100% 100%;
+  background-size: cover;
+  background-position: center;
   background-repeat: no-repeat;
 }
 
@@ -105,9 +106,9 @@ body::after {
 }
 
 @keyframes cardInnerGlow {
-  0%   { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 25px rgba(255,43,43,0.03); }
-  50%  { box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 50px rgba(255,43,43,0.09); }
-  100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 25px rgba(255,43,43,0.04); }
+  0%   { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 25px rgba(39, 39, 39, 0.03); }
+  50%  { box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 50px rgba(155, 155, 155, 0.09); }
+  100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 25px rgba(69, 68, 68, 0.04); }
 }
 
 /* Glow border via pseudo-element */
@@ -125,6 +126,7 @@ body::after {
     rgba(169, 167, 167, 0.3)
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: destination-out;
   mask-composite: exclude;
   animation: borderGlow 6s ease-in-out infinite alternate;
@@ -143,7 +145,7 @@ body::after {
   position: absolute;
   inset: -20px;
   border-radius: 30px;
-  background: radial-gradient(ellipse at center, rgba(255,43,43,0.06) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(47, 47, 47, 0.06) 0%, transparent 70%);
   animation: cardAura 8s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: -1;
@@ -296,10 +298,10 @@ body::after {
 .bar {
   height: 100%;
   width: 0%;
-  background: #ff2b2b;
+  background: #ffffff;
   border-radius: 20px;
   position: relative;
-  box-shadow: 0 0 12px 2px rgba(255,43,43,0.5), 0 0 24px 4px rgba(255,43,43,0.2);
+  box-shadow: 0 0 12px 2px rgba(198, 198, 198, 0.5), 0 0 24px 4px rgba(135, 135, 135, 0.2);
 }
 
 .bar::after {
@@ -584,6 +586,18 @@ button:hover {
   transform: translateY(0);
 }
 
+/* TikTok tooltip — red glow */
+.corner-item.tiktok:hover .corner-tooltip {
+  box-shadow: 0 4px 16px rgba(253, 253, 253, 0.5);
+  color: #9a9da5;
+}
+
+/* Discord tooltip — purple glow */
+.corner-item.discord-server:hover .corner-tooltip {
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.5);
+  color: #9a9da5;
+}
+
 .corner-link {
   display: block;
   width: clamp(52px, 5vmin, 82px);
@@ -662,6 +676,8 @@ button:hover {
 
 <img class="corner-decor" src="assets/bottom_left_corner_decor.png" alt="" />
 <img class="corner-decor-tr" src="assets/top_right_corner_decor.png" alt="" />
+
+
 
 <script>
 
